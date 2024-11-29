@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: product-page-quarkus-producer-dev
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davgordo/developer-charts
+    targetRevision: HEAD
+    path: quarkus-application
+    helm:
+      values: |
+        system: bookinfo
+        component: product-page-quarkus-producer
+        environment: dev
+        image:
+          tag: latest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bookinfo-dev
+  syncPolicy:
+    automated: 
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true
+    retry:
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m
